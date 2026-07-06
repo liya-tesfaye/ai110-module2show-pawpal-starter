@@ -76,10 +76,10 @@ Sample test output:
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()`, `Scheduler.sort_tasks_by_priority()` | Sorts tasks chronologically by `preferred_time` (untimed tasks last), or by priority with 1 = high first. |
+| Filtering | `Scheduler.filter_tasks(pet_name=None, completed=None)` | Returns tasks filtered by pet name and/or completion status; both filters are optional and can be combined. |
+| Conflict handling | `Scheduler.detect_conflicts()`, `Scheduler.get_conflict_warnings()`, `Task.conflicts_with()` | Detects pairs of tasks whose time intervals overlap and turns them into readable warning strings. |
+| Recurring tasks | `Task.complete_and_recur()`, `Owner.complete_task()` | Completing a daily/weekly task returns a new occurrence with its `due_date` shifted forward (1 or 7 days) and re-adds it to the pet's task list. |
 
 ## 📸 Demo Walkthrough
 

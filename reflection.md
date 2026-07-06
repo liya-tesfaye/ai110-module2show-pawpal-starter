@@ -73,8 +73,24 @@ pin down in Phase 2, not a structural/skeleton change.
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+My conflict detection only checks for overlapping time intervals based on 
+preferred_time + duration. This means a few tradeoffs:
+
+- Tasks with no preferred_time set are never checked for conflicts, since 
+  there's no interval to compare. This keeps the logic simple but means the 
+  scheduler could still silently schedule two "flexible" tasks back-to-back 
+  without warning.
+- I chose exact interval overlap (start/end times) rather than a fuzzier 
+  "too close together" check (e.g., flagging tasks less than 15 minutes 
+  apart). This is more predictable and easier to test, but it means a walk 
+  ending at 8:00 and a feeding starting at 8:00 exactly are treated as 
+  conflicting, even though back-to-back might be fine in practice for a real 
+  owner.
+
+I decided this tradeoff is acceptable for the scope of this project — a more 
+nuanced buffer-time system would add real value but also real complexity 
+(deciding buffer length per task type, etc.) that's beyond what this 
+scheduler needs to demonstrate.
 
 ---
 
