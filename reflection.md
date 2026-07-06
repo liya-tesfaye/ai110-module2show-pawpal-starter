@@ -6,7 +6,7 @@
 
 ### Core Actions
 
-**a. Initial Design
+**a. Initial Design**
 
 I designed PawPal+ around four core classes, each with a single clear responsibility:
 
@@ -33,7 +33,7 @@ I designed PawPal+ around four core classes, each with a single clear responsibi
 I decided tasks live on Owner rather than on Pet, since in practice an owner is 
 managing one daily schedule across all their pets, not a separate schedule per pet.
 
-**b. Design Changes
+**b. Design Changes**
 
 After reviewing my skeleton with my AI assistant, I made the following changes:
 
@@ -68,8 +68,25 @@ pin down in Phase 2, not a structural/skeleton change.
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+My scheduler considers three main constraints when building a daily plan:
+
+- **Available time** — the total minutes the owner has available in a day. 
+  `build_daily_plan()` stops adding tasks once this budget is used up, so 
+  lower-priority tasks may get dropped rather than overflow the day.
+- **Priority** — tasks are ranked 1 (high) to 3 (low) and sorted so the most 
+  important tasks (like medications) are considered before optional ones 
+  (like enrichment play) when time is tight.
+- **Time conflicts** — tasks with overlapping preferred_time + duration 
+  intervals can't both be scheduled, so the scheduler checks for overlaps 
+  before finalizing the plan.
+
+I decided priority mattered most, since a real pet owner would rather see a 
+medication task guaranteed a spot than a lower-stakes task like grooming. 
+Available time mattered next, since without it the plan could recommend more 
+than a day can actually hold. Preferences (like "no tasks after 9pm") were 
+treated as a secondary filter layered on top of these two, rather than a 
+primary sorting factor, since they narrow the pool of valid times rather 
+than rank tasks against each other.
 
 **b. Tradeoffs**
 
@@ -98,13 +115,36 @@ scheduler needs to demonstrate.
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+I used AI throughout the project for several distinct purposes: brainstorming 
+the initial class design and UML relationships, scaffolding class skeletons 
+from that design, generating first-pass implementations of scheduling logic 
+(sorting, conflict detection, recurrence), drafting and debugging pytest 
+tests, and reviewing my own code for gaps I hadn't noticed (like the missing 
+Task → Pet link).
+
+The most helpful prompts were the ones that asked for **review rather than 
+generation** — e.g., "review this skeleton and tell me what relationships 
+are missing" surfaced real design issues (the pet_name gap, the priority-as-
+string sorting bug) that I hadn't caught myself. Prompts that specified exact 
+constraints (e.g., "don't add anything beyond what I've listed") also 
+produced cleaner results than open-ended "build me a scheduler" requests, 
+which tended to over-build.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+One moment I didn't accept an AI suggestion as-is: when I asked how to 
+simplify `build_daily_plan()` for readability, the suggested version 
+collapsed the sort/filter/conflict-check steps into a single chained 
+comprehension. It was more compact, but harder to trace when something went 
+wrong — I couldn't tell at a glance which step (sorting, time-budget 
+filtering, or conflict avoidance) had produced a given result. I kept my 
+original step-by-step version with named intermediate variables instead, 
+since I judged debuggability to matter more than line count for this project.
+
+I verified AI-generated logic mainly through the pytest suite — writing 
+tests for sorting, recurrence, and conflict detection let me confirm the 
+implementation actually matched what I asked for, rather than just assuming 
+generated code was correct because it ran without errors.
 
 ---
 
@@ -112,13 +152,26 @@ scheduler needs to demonstrate.
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+My test suite covers: task completion status changes, task addition 
+increasing a pet's task count, sorting correctness (tasks returned in 
+chronological order), recurrence logic (a completed daily/weekly task 
+generates a correctly-dated next occurrence), and conflict detection 
+(overlapping tasks are flagged, non-overlapping tasks are not).
+
+These behaviors mattered most because they're the core "intelligence" of the 
+app — a scheduler that sorts incorrectly, misses conflicts, or mishandles 
+recurrence would give a pet owner an unreliable or even unsafe plan (e.g., a 
+missed medication reminder). Simpler behaviors like adding a pet were tested 
+too, since they're the foundation everything else depends on.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+I'm confident (4/5) that the core scheduling logic works correctly, since all 
+13 tests pass and cover the main happy paths and a few key edge cases. If I 
+had more time, I'd test: tasks with no preferred_time interacting with 
+conflict detection, an owner with zero pets or zero tasks calling 
+build_daily_plan(), a recurring task completed multiple days in a row, and 
+performance with a much larger number of tasks.
 
 ---
 
@@ -126,12 +179,25 @@ scheduler needs to demonstrate.
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+I'm most satisfied with the separation between Scheduler and the data 
+classes (Owner, Pet, Task). Keeping scheduling logic out of Owner made it 
+much easier to test in isolation and to reason about — I could change how 
+build_daily_plan() worked without worrying about breaking pet or task 
+management.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+If I had another iteration, I'd redesign conflict detection to use a real 
+buffer window (e.g., flag tasks less than 10 minutes apart, not just exact 
+overlaps) and add proper date tracking to Task, rather than relying only on 
+time-of-day, so recurrence and "today's schedule" logic would be more robust.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+The biggest thing I learned is that AI is very good at producing correct-
+looking code quickly, but it can't decide what tradeoffs are right for a 
+specific system — that stayed my responsibility throughout. Decisions like 
+keeping tasks on Owner instead of Pet, or choosing readability over a 
+"cleverer" one-liner, only made sense in the context of this specific app, 
+and being the one who made and could explain those calls is what "lead 
+architect" actually meant in practice.
