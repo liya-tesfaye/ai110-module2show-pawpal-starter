@@ -2,17 +2,19 @@
 
 ## 1. System Design
 
-**a. Initial design**
+## System Design
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+### Core Actions
 
-**b. Design changes**
+When I read through the PawPal+ scenario, I identified three core actions a pet owner should be able to perform:
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+1. **Add and manage pet care tasks** — The owner needs to be able to enter tasks like walks, feedings, medications, and grooming sessions, each with a duration and a priority level. This is the raw input the rest of the system depends on.
 
----
+2. **Generate a daily plan** — Once tasks exist, the owner should be able to ask the app to build a schedule for the day. The system needs to take into account how much time is available, how important each task is, and any constraints (like a task needing to happen at a specific time), and produce an ordered plan that fits.
+
+3. **View and understand the plan** — The owner should be able to see the generated schedule clearly (what happens when) and get some explanation of why the app chose that order — for example, why a high-priority task was scheduled before a lower-priority one, or why a task got dropped if there wasn't enough time.
+
+These three actions map roughly to the three main pieces of the system I'll need to design: something that represents a task, something that represents a pet/owner's data, and something that does the actual scheduling logic.
 
 ## 2. Scheduling Logic and Tradeoffs
 
