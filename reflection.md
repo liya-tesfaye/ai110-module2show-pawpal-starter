@@ -6,15 +6,63 @@
 
 ### Core Actions
 
-When I read through the PawPal+ scenario, I identified three core actions a pet owner should be able to perform:
+**a. Initial Design
 
-1. **Add and manage pet care tasks** — The owner needs to be able to enter tasks like walks, feedings, medications, and grooming sessions, each with a duration and a priority level. This is the raw input the rest of the system depends on.
+I designed PawPal+ around four core classes, each with a single clear responsibility:
 
-2. **Generate a daily plan** — Once tasks exist, the owner should be able to ask the app to build a schedule for the day. The system needs to take into account how much time is available, how important each task is, and any constraints (like a task needing to happen at a specific time), and produce an ordered plan that fits.
+- **Owner** — Represents the pet owner using the app. Holds their list of pets, 
+  their shared list of care tasks (one task list covering all their pets, rather 
+  than per-pet task lists), and any scheduling preferences. Responsible for 
+  managing which pets and tasks exist in the system.
 
-3. **View and understand the plan** — The owner should be able to see the generated schedule clearly (what happens when) and get some explanation of why the app chose that order — for example, why a high-priority task was scheduled before a lower-priority one, or why a task got dropped if there wasn't enough time.
+- **Pet** — Represents an individual animal (name, species/breed, age, notes). 
+  Implemented as a dataclass since it's mostly a data container with no complex 
+  behavior of its own.
 
-These three actions map roughly to the three main pieces of the system I'll need to design: something that represents a task, something that represents a pet/owner's data, and something that does the actual scheduling logic.
+- **Task** — Represents a single care activity (walk, feeding, meds, etc.), with 
+  duration, priority, category, timing info, and recurrence. Also a dataclass, 
+  but includes methods like conflicts_with() since tasks need to check for 
+  overlaps with each other.
+
+- **Scheduler** — A separate class responsible for turning a pool of tasks into 
+  an actual daily plan. It handles sorting by priority, detecting conflicts, and 
+  building the final schedule. I kept this separate from Owner and Task so the 
+  scheduling *logic* is isolated from the *data* — this should make it easier to 
+  test and to change the scheduling algorithm later without touching Owner or Task.
+
+I decided tasks live on Owner rather than on Pet, since in practice an owner is 
+managing one daily schedule across all their pets, not a separate schedule per pet.
+
+**b. Design Changes
+
+After reviewing my skeleton with my AI assistant, I made the following changes:
+
+- **Added `pet_name` to Task** — Since tasks live in a shared list on Owner 
+  rather than per-pet, there was no way to tell which pet a task belonged to. 
+  My assistant pointed out this also validates keeping the task list on Owner 
+  in the first place: a shared list lets the scheduler catch conflicts across 
+  all pets (e.g., can't walk two dogs at the same time), which a per-pet list 
+  would hide. Adding `pet_name` gets the benefit without losing per-pet detail.
+
+- **Changed `priority` from str to int** — Sorting "high"/"medium"/"low" as 
+  strings sorts alphabetically, not by actual priority. Using an int ranking 
+  (1 = high, 2 = medium, 3 = low) makes sort_tasks_by_priority() correct and 
+  simple.
+
+- **Changed `preferred_time` from str to datetime.time** — String comparison 
+  of times like "9:00" vs "10:00" doesn't sort correctly. Using datetime.time 
+  makes ordering and future interval math (start time + duration) reliable.
+
+- **Added a `preferences` parameter to Scheduler** — My original design didn't 
+  give Scheduler access to owner preferences, even though the scenario requires 
+  the plan to consider them. Rather than passing a whole Owner object (which 
+  would couple Scheduler to Owner unnecessarily), I pass just the preferences 
+  data it needs, keeping Scheduler easier to test in isolation.
+
+I did not yet resolve the deeper semantic question my assistant raised — 
+whether a "conflict" requires a true time interval (start + duration) rather 
+than just a preferred_time point — since that's implementation logic I'll 
+pin down in Phase 2, not a structural/skeleton change.
 
 ## 2. Scheduling Logic and Tradeoffs
 
