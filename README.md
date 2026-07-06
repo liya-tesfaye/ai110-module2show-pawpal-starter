@@ -56,19 +56,47 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 
 ## 🧪 Testing PawPal+
 
-```bash
+## 🧪 Testing PawPal+
+
+Our test suite covers:
+- **Task completion** — verifying `mark_complete()` correctly updates status
+- **Task addition** — verifying adding a task increases a pet's task count
+- **Sorting correctness** — verifying tasks are returned in chronological order
+- **Recurrence logic** — verifying a completed daily/weekly task generates a 
+  correctly-dated next occurrence
+- **Conflict detection** — verifying overlapping tasks are flagged, and 
+  non-overlapping tasks are not
+
+\```bash
 # Run the full test suite:
 pytest
 
 # Run with coverage:
 pytest --cov
-```
+\```
 
 Sample test output:
 
-```
-# Paste your pytest output here
-```
+\```
+PS C:\Users\DSU\ai110-module2show-pawpal-starter> python -m pytest
+================================================== test session starts ==================================================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\DSU\ai110-module2show-pawpal-starter
+plugins: anyio-4.14.0
+collected 13 items
+
+tests\test_pawpal.py .............                                                                                 [100%]
+
+================================================== 13 passed in 0.05s ===================================================
+\```
+
+**Confidence Level:** ⭐⭐⭐⭐☆ (4/5)
+
+All 13 tests pass, covering the core scheduling behaviors: sorting, filtering, 
+conflict detection, recurrence, and basic task/pet management. I'd rate this 
+a 4 rather than a 5 because coverage is focused on core logic rather than 
+exhaustive edge cases (e.g., very large task lists, timezone edge cases, or 
+malformed input from the UI layer).
 
 ## 📐 Smarter Scheduling
 
